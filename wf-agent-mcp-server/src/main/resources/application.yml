@@ -1,0 +1,31 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: wf-agent-mcp-server
+
+  datasource:
+    url: jdbc:sqlite:wf-agent.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+
+  ai:
+    mcp:
+      server:
+        name: wf-agent-tool-server
+        version: 1.0.0
+        instructions: 风控域只读数据工具集：进件、决策流水、变量快照、策略版本、外部数据、变量指标、减值参数
+
+logging:
+  level:
+    root: INFO
+    com.libo.wfagent: DEBUG

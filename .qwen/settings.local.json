@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls ~/.qwen/bin/ && ~/.qwen/bin/qwen --help 2>&1 | head -60)",
+      "Bash(file ~/.qwen/bin/qwen; ls -la ~/.qwen/bin/qwen; which qwen)",
+      "Read(//Users/libo/.qwen/bin/qwen/**)",
+      "Bash(strings ~/.qwen/bin/qwen/qwen-1.0.0-preview.1 2>/dev/null | grep -iE '^/\\(quota|usage|cost|status|balance\\)|quota|remaining.*\\(credit|token\\)|credit.*usage' | sort -u | head -40)",
+      "Bash(strings ~/.qwen/bin/qwen/qwen-1.0.0-preview.1 2>/dev/null | grep -oE '\\(Command name: ?\"[a-z-]+\"|name:\"\\(usage|cost|quota|stats|balance|insights|usage[ -]?metrics\\)\"\\)' | sort -u | head -30)",
+      "Bash(strings ~/.qwen/bin/qwen/qwen-1.0.0-preview.1 2>/dev/null | grep -oE '.{80}name:\"usage\".{200}' | head -5; echo ---; strings ~/.qwen/bin/qwen/qwen-1.0.0-preview.1 2>/dev/null | grep -oE '.{60}name:\"insights\".{150}' | head -3)"
+    ]
+  }
+}

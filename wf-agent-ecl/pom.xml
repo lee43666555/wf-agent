@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.libo.wfagent</groupId>
+        <artifactId>wf-agent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>wf-agent-ecl</artifactId>
+    <name>wf-agent-ecl</name>
+    <description>ECL 减值分析 Agent：可复算减值工具 + 两期差异归因</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.libo.wfagent</groupId>
+            <artifactId>wf-agent-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.libo.wfagent</groupId>
+            <artifactId>wf-agent-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.libo.wfagent</groupId>
+            <artifactId>wf-agent-tools</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,38 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: wf-agent-risk-review
+
+  datasource:
+    url: jdbc:sqlite:wf-agent.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+
+# Agent 运行时开关
+wf-agent:
+  model:
+    # scripted：走剧本，不需要 API Key；spring-ai：调真实模型
+    mode: scripted
+  tools:
+    # local：进程内直连 SQLite；mcp：走 wf-agent-mcp-server
+    mode: local
+  runtime:
+    max-steps: 8
+    max-repeat-per-tool: 1
+    max-retry: 1
+    tool-timeout-ms: 15000
+
+logging:
+  level:
+    root: INFO
+    com.libo.wfagent: DEBUG

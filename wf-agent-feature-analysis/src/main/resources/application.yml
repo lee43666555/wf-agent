@@ -1,0 +1,35 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: wf-agent-feature-analysis
+
+  datasource:
+    url: jdbc:sqlite:wf-agent.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+
+wf-agent:
+  model:
+    mode: scripted
+  tools:
+    mode: local
+  runtime:
+    max-steps: 6
+    max-repeat-per-tool: 1
+    max-retry: 1
+    tool-timeout-ms: 15000
+
+logging:
+  level:
+    root: INFO
+    com.libo.wfagent: DEBUG
