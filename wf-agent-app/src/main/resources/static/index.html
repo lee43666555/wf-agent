@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wf-agent · 风控域 Agent</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background:#f6f7f9; color:#1f2328; }
+  header { background:#fff; border-bottom:1px solid #e5e7eb; padding:20px 32px; }
+  header h1 { margin:0; font-size:20px; }
+  header p { margin:6px 0 0; color:#6b7280; font-size:13px; }
+  main { max-width:1240px; margin:0 auto; padding:24px 32px 64px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px; }
+  .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px; }
+  .card h3 { margin:0 0 4px; font-size:16px; }
+  .card .desc { color:#6b7280; font-size:13px; margin:0 0 14px; }
+  .field { margin-bottom:10px; }
+  .field label { display:block; font-size:12px; color:#57606a; margin-bottom:4px; }
+  .field input { width:100%; padding:8px 10px; border:1px solid #d0d7de; border-radius:6px; font-size:13px; }
+  button { background:#1f6feb; color:#fff; border:0; border-radius:6px; padding:8px 16px; font-size:13px; cursor:pointer; }
+  button:hover { background:#1a5fd0; }
+  .result { margin-top:14px; display:none; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+  .badge.ok { background:#dafbe1; color:#1a7f37; }
+  .badge.degraded { background:#fff8c5; color:#9a6700; }
+  .badge.failed { background:#ffebe9; color:#cf222e; }
+  .muted { color:#6b7280; font-size:12px; margin-left:8px; }
+  h4 { font-size:13px; margin:14px 0 6px; color:#374151; }
+  pre { background:#f6f8fa; border:1px solid #eaeef2; border-radius:8px; padding:12px; overflow:auto; max-height:300px; font-size:12px; line-height:1.5; margin:0; white-space:pre-wrap; word-break:break-all; }
+  section.trace { margin-top:28px; }
+  section.trace h2 { font-size:16px; margin:0 0 12px; }
+  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
+  th, td { text-align:left; padding:9px 12px; font-size:13px; border-bottom:1px solid #f0f2f5; }
+  th { background:#f9fafb; color:#57606a; font-weight:600; }
+  tr:last-child td { border-bottom:0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>wf-agent · 风控域 Agent 应用骨架</h1>
+  <p>风控排查 / 特征分析 / ECL 减值 三个 Agent，共用一套 ReAct 运行时。模型只做规划与表述，数值与规则由代码判定。</p>
+</header>
+<main>
+  <div class="grid" id="cards"></div>
+  <section class="trace">
+    <h2>最近运行 Trace <button onclick="loadTrace()" style="margin-left:8px">刷新</button></h2>
+    <table id="traceTable"><thead><tr><th>Agent</th><th>状态</th><th>traceId</th><th>步骤</th><th>耗时</th></tr></thead><tbody></tbody></table>
+  </section>
+</main>
+<script>
+var AGENTS = [
+  { name:"risk-review", title:"风控排查", desc:"给定进件号，还原审批过程与规则命中", url:"/api/risk-review", fields:[{key:"applicationId", label:"进件号", value:"APPL20260003"}] },
+  { name:"feature-analysis", title:"特征分析", desc:"自然语言提问，返回特征分布与坏账率", url:"/api/feature-analysis", fields:[{key:"question", label:"问题", value:"分析近3月多头借贷申请次数在普通客群上的坏账率分布"}] },
+  { name:"ecl-analysis", title:"ECL 减值", desc:"两期对比 + 量价拆分", url:"/api/ecl-analysis", fields:[{key:"periodA", label:"账期 A", value:"202608"},{key:"periodB", label:"账期 B", value:"202609"}] }
+];
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+function renderCards(){
+  var html = "";
+  AGENTS.forEach(function(a, i){
+    html += '<div class="card">';
+    html += '<h3>' + esc(a.title) + ' <span class="muted">' + esc(a.name) + '</span></h3>';
+    html += '<p class="desc">' + esc(a.desc) + '</p>';
+    a.fields.forEach(function(f){
+      html += '<div class="field"><label>' + esc(f.label) + '</label><input id="in-' + i + '-' + f.key + '" value="' + esc(f.value) + '"></div>';
+    });
+    html += '<button onclick="run(' + i + ')">运行</button>';
+    html += '<div class="result" id="res-' + i + '"></div>';
+    html += '</div>';
+  });
+  document.getElementById("cards").innerHTML = html;
+}
+function run(i){
+  var a = AGENTS[i];
+  var parts = [];
+  a.fields.forEach(function(f){
+    var v = document.getElementById("in-" + i + "-" + f.key).value;
+    parts.push(encodeURIComponent(f.key) + "=" + encodeURIComponent(v));
+  });
+  var url = a.url + "?" + parts.join("&");
+  var box = document.getElementById("res-" + i);
+  box.style.display = "block";
+  box.innerHTML = '<span class="muted">运行中…</span>';
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    var st = d.status || "UNKNOWN";
+    var cls = st === "OK" ? "ok" : st === "DEGRADED" ? "degraded" : "failed";
+    var h = '<div><span class="badge ' + cls + '">' + esc(st) + '</span>';
+    h += '<span class="muted">traceId: ' + esc(d.traceId) + ' · 步骤 ' + ((d.steps||[]).length) + ' · ' + (d.totalCostMs||0) + 'ms</span></div>';
+    h += '<h4>说明</h4><pre>' + esc(d.narrative || "(无)") + '</pre>';
+    h += '<h4>结构化输出</h4><pre>' + esc(JSON.stringify(d.output || {}, null, 2)) + '</pre>';
+    box.innerHTML = h;
+    loadTrace();
+  }).catch(function(e){
+    box.innerHTML = '<span class="badge failed">请求失败</span><pre>' + esc(e && e.message ? e.message : e) + '</pre>';
+  });
+}
+function loadTrace(){
+  fetch("/api/trace?limit=10").then(function(r){ return r.json(); }).then(function(list){
+    var tb = document.querySelector("#traceTable tbody");
+    if(!list || !list.length){ tb.innerHTML = '<tr><td colspan="6" class="muted">暂无运行记录</td></tr>'; return; }
+    tb.innerHTML = list.map(function(t){
+      var st = t.status || "";
+      var cls = st === "OK" ? "ok" : st === "DEGRADED" ? "degraded" : "failed";
+      return '<tr><td>' + esc(t.agentName) + '</td><td><span class="badge ' + cls + '">' + esc(st) + '</span></td><td>' + esc(t.traceId) + '</td><td>' + ((t.steps||[]).length) + '</td><td>' + (t.totalCostMs||0) + 'ms</td></tr>';
+    }).join("");
+  }).catch(function(){});
+}
+renderCards();
+loadTrace();
+</script>
+</body>
+</html>
