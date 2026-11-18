@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: wf-agent-app
+
+  datasource:
+    url: jdbc:sqlite:wf-agent.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 8
+      minimum-idle: 1
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+
+wf-agent:
+  model:
+    # scripted：走剧本，无需 API Key；spring-ai：调真实模型（需下方 base-url / api-key）
+    mode: scripted
+    # 走 OpenAI 兼容协议：内部统一网关 / DeepSeek / 通义 / Ollama 都可以
+    base-url: ${WF_AGENT_MODEL_BASE_URL:https://api.deepseek.com}
+    api-key: ${WF_AGENT_MODEL_API_KEY:}
+    model: ${WF_AGENT_MODEL_NAME:deepseek-chat}
+    temperature: 0.0
+  tools:
+    mode: local
+  trace:
+    # memory：进程内环形缓冲，重启即丢，仅供单模块调试
+    # jdbc：落 agent_trace / agent_trace_step，支持按 traceId 事后回放（统一入口默认开）
+    mode: jdbc
+  runtime:
+    max-steps: 8
+    max-repeat-per-tool: 1
+    max-retry: 1
+    tool-timeout-ms: 15000
+
+logging:
+  level:
+    root: INFO
+    com.libo.wfagent: DEBUG

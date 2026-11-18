@@ -1,0 +1,19 @@
+# MCP 模式：工具通过 MCP 协议从 wf-agent-mcp-server 拉取
+# 启动：java -jar wf-agent-app/target/*.jar --spring.profiles.active=mcp
+# 前置：wf-agent-mcp-server 已在 WF_AGENT_MCP_URL 上运行
+
+spring:
+  ai:
+    mcp:
+      client:
+        enabled: true
+        name: wf-agent-app
+        type: sync
+        sse:
+          connections:
+            wf-tools:
+              url: ${WF_AGENT_MCP_URL:http://localhost:8081}
+
+wf-agent:
+  tools:
+    mode: mcp
