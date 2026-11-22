@@ -9,3 +9,5 @@ target/
 .DS_Store
 *.log
 agent-runtime-interview.md
+/.qoder/
+/.qwen/
